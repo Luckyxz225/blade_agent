@@ -1,0 +1,2407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数字孪生研究中心 - 压气机叶片设计智能体</title>
+    
+    <!-- External Libraries -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    
+    <style>
+        /* ===== CSS Variables ===== */
+        :root {
+            --primary-color: #2563eb;
+            --primary-light: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --secondary-color: #64748b;
+            --accent-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #e2e8f0;
+            --bg-dark: #0f172a;
+            --bg-card: #ffffff;
+            
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --text-inverse: #ffffff;
+            
+            --border-color: #e2e8f0;
+            --border-light: #f1f5f9;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+            
+            --transition-fast: 0.15s ease-in-out;
+            --transition-base: 0.25s ease-in-out;
+            --transition-slow: 0.3s ease-in-out;
+        }
+
+        /* ===== Global Styles ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-primary); /* 改为纯色背景 */
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ===== Layout Components ===== */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            max-height: 100vh; /* 确保容器不超过视口高度 */
+            width: 100%; /* 占满整个宽度 */
+            margin: 0;
+            background: var(--bg-primary);
+            box-shadow: var(--shadow-xl);
+            overflow: hidden; /* 防止整体滚动 */
+        }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            flex: 1; /* 占据1份宽度 */
+            min-width: 280px;
+            max-width: 350px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition-base);
+            max-height: 100vh; /* 确保侧边栏不超过视口高度 */
+            overflow: hidden; /* 防止侧边栏整体滚动 */
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            color: var(--text-inverse);
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-header .subtitle {
+            opacity: 0.9;
+            font-size: 0.875rem;
+            font-weight: 400;
+        }
+
+        /* ===== Configuration Panel ===== */
+        .config-section {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .config-section h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            transition: var(--transition-fast);
+            background: var(--bg-primary);
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--text-inverse);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary-color);
+            color: var(--text-inverse);
+        }
+
+        .btn-success {
+            background: var(--accent-color);
+            color: var(--text-inverse);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: var(--text-inverse);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ===== Tools Panel ===== */
+        .tools-section {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            max-height: calc(100vh - 300px); /* 确保工具区域有明确的最大高度 */
+        }
+
+        .tools-section h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tool-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            transition: var(--transition-fast);
+        }
+
+        .tool-card:hover {
+            background: var(--bg-primary);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .tool-card .tool-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .tool-card .tool-description {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .tool-card .tool-params {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* ===== Main Chat Area ===== */
+        .main-content {
+            flex: 4; /* 占据4份宽度 */
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-secondary);
+        }
+
+        .chat-header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .chat-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .chat-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .icon-btn {
+            width: 2.5rem;
+            height: 2.5rem;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            color: var(--text-secondary);
+        }
+
+        .icon-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--primary-color);
+        }
+
+        /* ===== Workspace Area ===== */
+        .workspace {
+            flex: 2; /* 占据2份宽度 */
+            min-width: 250px;
+            background: var(--bg-card);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            max-height: 100vh;
+            overflow: hidden;
+        }
+
+        .workspace-header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .workspace-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .workspace-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            background: var(--border-color);
+            overflow: hidden;
+        }
+
+        /* 任务区域样式 */
+        .task-section {
+            flex: 1;
+            background: var(--bg-card);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .task-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0;
+        }
+
+        .task-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-color);
+        }
+
+        .status-indicator.idle {
+            background: var(--text-muted);
+        }
+
+        .status-indicator.running {
+            background: var(--warning-color);
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.completed {
+            background: var(--accent-color);
+        }
+
+        .status-indicator.error {
+            background: var(--danger-color);
+        }
+
+        .task-content {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .task-plan {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .task-plan h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .task-steps {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .task-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .task-step:last-child {
+            border-bottom: none;
+        }
+
+        .step-number {
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .step-number.current {
+            background: var(--primary-color);
+            color: var(--text-inverse);
+        }
+
+        .step-number.completed {
+            background: var(--accent-color);
+            color: var(--text-inverse);
+        }
+
+        .step-number.planning {
+            background: var(--warning-color);
+            color: var(--text-inverse);
+        }
+
+        .step-number.executing {
+            background: var(--accent-color);
+            color: var(--text-inverse);
+            animation: pulse 2s infinite;
+        }
+
+        .step-content {
+            flex: 1;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .step-content.current {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            height: 4px;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-color);
+            border-radius: var(--radius-sm);
+            transition: width 0.3s ease;
+        }
+
+        /* 结果区域样式 */
+        .results-section {
+            flex: 1;
+            background: var(--bg-card);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .results-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .results-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0;
+        }
+
+        .results-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .results-content {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .result-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .result-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .result-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .result-timestamp {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .result-data {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .result-chart {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            margin-top: 0.75rem;
+            text-align: center;
+            color: var(--text-muted);
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 2rem;
+            font-size: 0.875rem;
+        }
+
+        .empty-state i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* ===== Messages Area ===== */
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            height: calc(100vh - 200px); /* 确保消息区域有明确的高度限制 */
+            min-height: 300px; /* 设置最小高度 */
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            max-width: 85%;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .message.user-message {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .user-message .message-avatar {
+            background: var(--primary-color);
+            color: var(--text-inverse);
+        }
+
+        .assistant-message .message-avatar {
+            background: var(--accent-color);
+            color: var(--text-inverse);
+        }
+
+        .message-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1rem 1.25rem;
+            box-shadow: var(--shadow-sm);
+            flex: 1;
+        }
+
+        .user-message .message-content {
+            background: var(--primary-color);
+            color: var(--text-inverse);
+            border-color: var(--primary-dark);
+        }
+
+        .message-text {
+            line-height: 1.6;
+            font-size: 0.9375rem;
+        }
+
+        .message-timestamp {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            opacity: 0.8;
+        }
+
+        .user-message .message-timestamp {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+
+        /* ===== Input Area ===== */
+        .input-area {
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-color);
+            padding: 1.5rem 2rem;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+
+        .input-field {
+            flex: 1;
+            position: relative;
+        }
+
+        .message-input {
+            width: 100%;
+            min-height: 2.75rem;
+            max-height: 8rem;
+            padding: 0.875rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            font-size: 0.9375rem;
+            line-height: 1.5;
+            resize: none;
+            transition: var(--transition-fast);
+            background: var(--bg-primary);
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+        }
+
+        .message-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .send-btn {
+            width: 2.75rem;
+            height: 2.75rem;
+            background: var(--primary-color);
+            color: var(--text-inverse);
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            font-size: 1rem;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ===== Loading States ===== */
+        .loading-message {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            margin: 1rem 0;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* ===== System Messages ===== */
+        .system-message {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border: 1px solid #93c5fd;
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin: 1rem 0;
+            color: #1e40af;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .system-message.success {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-color: #86efac;
+            color: #166534;
+        }
+
+        .system-message.error {
+            background: linear-gradient(135deg, #fef2f2, #fecaca);
+            border-color: #fca5a5;
+            color: #991b1b;
+        }
+
+        /* ===== Markdown Styles ===== */
+        .message-text h1, .message-text h2, .message-text h3,
+        .message-text h4, .message-text h5, .message-text h6 {
+            margin: 1rem 0 0.5rem;
+            font-weight: 600;
+        }
+
+        .message-text h1 { font-size: 1.25rem; }
+        .message-text h2 { font-size: 1.125rem; }
+        .message-text h3 { font-size: 1rem; }
+
+        .message-text p {
+            margin: 0.75rem 0;
+            line-height: 1.6;
+        }
+
+        .message-text ul, .message-text ol {
+            margin: 0.75rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .message-text li {
+            margin: 0.25rem 0;
+        }
+
+        .message-text pre {
+            background: var(--bg-dark);
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-size: 0.875rem;
+        }
+
+        .message-text code:not(pre code) {
+            background: var(--bg-tertiary);
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .message-text blockquote {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 1rem;
+            margin: 1rem 0;
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        .message-text table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .message-text th, .message-text td {
+            border: 1px solid var(--border-color);
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .message-text th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+        }
+
+        /* ===== History Panel ===== */
+        .history-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: var(--bg-card);
+            border-left: 1px solid var(--border-color);
+            box-shadow: var(--shadow-xl);
+            transition: var(--transition-base);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .history-panel.open {
+            right: 0;
+        }
+
+        .history-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .history-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        /* ===== Animations ===== */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(1rem);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .plan-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .plan-status .fa-spin {
+            animation: fa-spin 2s infinite linear;
+        }
+
+        /* ===== Responsive Design ===== */
+        @media (max-width: 1024px) {
+            .sidebar {
+                min-width: 250px;
+                max-width: 300px;
+            }
+            
+            .workspace {
+                min-width: 200px;
+            }
+            
+            .messages-container {
+                height: calc(100vh - 180px); /* 调整中等屏幕的高度 */
+            }
+            
+            .tools-section {
+                max-height: calc(100vh - 280px); /* 调整工具区域高度 */
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+                height: 100vh; /* 确保移动端全屏高度 */
+            }
+            
+            .sidebar {
+                flex: none;
+                width: 100%;
+                height: auto;
+                max-height: 30vh; /* 移动端侧边栏最大高度 */
+                min-width: auto;
+                max-width: none;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+            
+            .main-content {
+                flex: 1;
+                height: 45vh; /* 移动端主内容区域高度 */
+                min-height: 45vh;
+            }
+            
+            .workspace {
+                flex: none;
+                width: 100%;
+                height: 25vh; /* 移动端工作区高度 */
+                min-width: auto;
+                border-left: none;
+                border-top: 1px solid var(--border-color);
+            }
+            
+            .sidebar-header {
+                padding: 1rem;
+            }
+            
+            .config-section, .tools-section {
+                padding: 1rem;
+            }
+            
+            .tools-section {
+                max-height: 150px; /* 移动端工具区域高度限制 */
+            }
+            
+            .messages-container {
+                padding: 1rem;
+                height: calc(45vh - 120px); /* 移动端消息区域高度 */
+                min-height: 150px;
+            }
+            
+            .task-content,
+            .results-content {
+                padding: 1rem;
+            }
+            
+            .input-area {
+                padding: 1rem;
+            }
+            
+            .message {
+                max-width: 95%;
+            }
+            
+            .history-panel {
+                width: 100%;
+                right: -100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar-header h1 {
+                font-size: 1.125rem;
+            }
+            
+            .chat-header {
+                padding: 0.75rem 1rem;
+            }
+            
+            .workspace-header {
+                padding: 0.75rem 1rem;
+            }
+            
+            .messages-container {
+                padding: 0.75rem;
+                height: calc(45vh - 100px); /* 小屏幕消息区域高度 */
+                min-height: 120px;
+            }
+            
+            .tools-section {
+                max-height: 120px; /* 小屏幕工具区域高度 */
+            }
+            
+            .task-content,
+            .results-content {
+                padding: 0.75rem;
+            }
+            
+            .input-area {
+                padding: 0.75rem;
+            }
+            
+            .message-avatar {
+                width: 2rem;
+                height: 2rem;
+                font-size: 0.875rem;
+            }
+            
+            .send-btn {
+                width: 2.5rem;
+                height: 2.5rem;
+            }
+        }
+
+        /* ===== Utility Classes ===== */
+        .fade-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* ===== Custom Scrollbar Styles ===== */
+        .messages-container::-webkit-scrollbar,
+        .tools-section::-webkit-scrollbar,
+        .history-content::-webkit-scrollbar,
+        .task-content::-webkit-scrollbar,
+        .results-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .messages-container::-webkit-scrollbar-track,
+        .tools-section::-webkit-scrollbar-track,
+        .history-content::-webkit-scrollbar-track,
+        .task-content::-webkit-scrollbar-track,
+        .results-content::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb,
+        .tools-section::-webkit-scrollbar-thumb,
+        .history-content::-webkit-scrollbar-thumb,
+        .task-content::-webkit-scrollbar-thumb,
+        .results-content::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+            transition: var(--transition-fast);
+        }
+
+        .messages-container::-webkit-scrollbar-thumb:hover,
+        .tools-section::-webkit-scrollbar-thumb:hover,
+        .history-content::-webkit-scrollbar-thumb:hover,
+        .task-content::-webkit-scrollbar-thumb:hover,
+        .results-content::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+
+        /* Firefox 滚动条样式 */
+        .messages-container,
+        .tools-section,
+        .history-content,
+        .task-content,
+        .results-content {
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) var(--bg-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <!-- Header -->
+            <div class="sidebar-header">
+                <h1>
+                    <i class="fas fa-robot"></i>
+                    智能设计助手
+                </h1>
+                <p class="subtitle">中科院工程热物理研究所</p>
+            </div>
+
+            <!-- Configuration Section -->
+            <div class="config-section">
+                <h3>
+                    <i class="fas fa-cog"></i>
+                    API 配置
+                </h3>
+                
+                <div class="form-group">
+                    <label class="form-label" for="apiKey">API 密钥</label>
+                    <input type="password" id="apiKey" class="form-input" placeholder="请输入API密钥" value="{{ env_config.api_key }}">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="baseUrlSelect">服务提供商</label>
+                    <select id="baseUrlSelect" class="form-select" onchange="updateModelOptions()">
+                        <option value="SiliconFlow">SiliconFlow</option>
+                        <option value="DeepSeek">DeepSeek</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="modelNameSelect">模型选择</label>
+                    <select id="modelNameSelect" class="form-select">
+                        <!-- 模型选项将通过JavaScript动态生成 -->
+                    </select>
+                </div>
+                
+                <button class="btn btn-primary" onclick="updateConfig()" style="width: 100%;">
+                    <i class="fas fa-save"></i>
+                    保存配置
+                </button>
+            </div>
+
+            <!-- Tools Section -->
+            <div class="tools-section">
+                <h3>
+                    <i class="fas fa-tools"></i>
+                    可用工具
+                </h3>
+                <div id="toolsList">
+                    <div class="loading-message">
+                        <div class="spinner"></div>
+                        <span>加载工具中...</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Chat Header -->
+            <div class="chat-header">
+                <h2>压气机叶片设计对话</h2>
+                <div class="chat-actions">
+                    <button class="icon-btn" onclick="toggleHistory()" title="查看历史">
+                        <i class="fas fa-history"></i>
+                    </button>
+                    <button class="icon-btn" onclick="clearHistory()" title="清除历史">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                    <button class="icon-btn" onclick="exportConversation()" title="导出对话">
+                        <i class="fas fa-download"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages Container -->
+            <div class="messages-container" id="messagesContainer">
+                <div class="system-message">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong>欢迎使用压气机叶片设计智能体！</strong>
+                        <p>请先配置API设置，然后开始您的设计对话。我可以帮助您进行叶片设计、性能评估和优化分析。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <div class="input-field">
+                        <textarea 
+                            id="messageInput" 
+                            class="message-input" 
+                            placeholder="请描述您的叶片设计需求..." 
+                            rows="1"
+                            onkeydown="handleKeyDown(event)"
+                            oninput="autoResize(this)"
+                        ></textarea>
+                    </div>
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                        <span class="sr-only">发送消息</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Workspace -->
+        <aside class="workspace">
+            <!-- Workspace Header -->
+            <div class="workspace-header">
+                <h2>
+                    <i class="fas fa-tasks"></i>
+                    工作区
+                </h2>
+                <div class="chat-actions">
+                    <button class="icon-btn" onclick="clearWorkspace()" title="清空工作区">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                    <button class="icon-btn" onclick="exportWorkspace()" title="导出工作区">
+                        <i class="fas fa-download"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Workspace Content -->
+            <div class="workspace-content">
+                <!-- 任务区域 -->
+                <div class="task-section">
+                    <div class="task-header">
+                        <h3>
+                            <i class="fas fa-list-ol"></i>
+                            任务规划与执行
+                        </h3>
+                        <div class="task-status">
+                            <div class="status-indicator idle" id="taskStatusIndicator"></div>
+                            <span id="taskStatusText">待启动</span>
+                        </div>
+                    </div>
+                    <div class="task-content" id="taskContent">
+                        <div class="empty-state">
+                            <i class="fas fa-clipboard-list"></i>
+                            <div>
+                                <strong>暂无任务</strong><br>
+                                <small>AI助手将在这里展示任务规划和执行进度</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 结果区域 -->
+                <div class="results-section">
+                    <div class="results-header">
+                        <h3>
+                            <i class="fas fa-chart-bar"></i>
+                            结果与可视化
+                        </h3>
+                        <div class="results-actions">
+                            <button class="icon-btn" onclick="refreshResults()" title="刷新结果">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                            <button class="icon-btn" onclick="clearResults()" title="清空结果">
+                                <i class="fas fa-eraser"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="results-content" id="resultsContent">
+                        <div class="empty-state">
+                            <i class="fas fa-chart-line"></i>
+                            <div>
+                                <strong>暂无结果</strong><br>
+                                <small>工具函数的执行结果和可视化图表将在这里显示</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- History Panel -->
+    <div class="history-panel" id="historyPanel">
+        <div class="history-header">
+            <h3>对话历史</h3>
+            <button class="icon-btn" onclick="toggleHistory()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="history-content" id="historyContent">
+            <!-- 历史内容将在这里显示 -->
+        </div>
+    </div>
+
+    <script>
+        // ===== Global Variables =====
+        let conversationHistory = [];
+        let isRequestInProgress = false;
+        let messageCount = 0;
+        const MAX_MESSAGES = 100;
+        let currentAgent = null;
+
+        // ===== Model Configurations =====
+        const modelConfigs = {
+            'SiliconFlow': {
+                url: 'https://api.siliconflow.cn/v1',
+                models: [
+                    { display: 'Qwen/Qwen2.5-32B-Instruct', value: 'openai/Qwen/Qwen2.5-32B-Instruct' },
+                    { display: 'Qwen/Qwen2.5-72B-Instruct', value: 'openai/Qwen/Qwen2.5-72B-Instruct' },
+                    { display: 'Qwen/Qwen2.5-14B-Instruct', value: 'openai/Qwen/Qwen2.5-14B-Instruct' },
+                    { display: 'Qwen/Qwen2.5-7B-Instruct', value: 'openai/Qwen/Qwen2.5-7B-Instruct' },
+                    { display: 'deepseek-ai/DeepSeek-R1', value: 'openai/deepseek-ai/DeepSeek-R1' },
+                    { display: 'deepseek-ai/DeepSeek-V3', value: 'openai/deepseek-ai/DeepSeek-V3' },
+                    { display: 'Qwen/Qwen3-32B', value: 'openai/Qwen/Qwen3-32B' },
+                    { display: 'Qwen/Qwen3-14B', value: 'openai/Qwen/Qwen3-14B' },
+                    { display: 'Qwen/Qwen3-8B', value: 'openai/Qwen/Qwen3-8B' },
+                    { display: 'moonshotai/Kimi-K2-Instruct', value: 'openai/moonshotai/Kimi-K2-Instruct' }
+                ]
+            },
+            'DeepSeek': {
+                url: 'https://api.deepseek.com/v1',
+                models: [
+                    { display: 'deepseek-chat', value: 'deepseek-chat' },
+                    { display: 'deepseek-reasoner', value: 'deepseek-reasoner' }
+                ]
+            }
+        };
+
+        // ===== Utility Functions =====
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function throttle(func, limit) {
+            let inThrottle;
+            return function() {
+                const args = arguments;
+                const context = this;
+                if (!inThrottle) {
+                    func.apply(context, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatTimestamp(date = new Date()) {
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        // ===== Markdown Rendering =====
+        function renderMarkdown(text) {
+            if (typeof marked !== 'undefined') {
+                try {
+                    return marked.parse(text);
+                } catch (error) {
+                    console.warn('Markdown parsing failed:', error);
+                    return escapeHtml(text).replace(/\n/g, '<br>');
+                }
+            } else {
+                return escapeHtml(text).replace(/\n/g, '<br>');
+            }
+        }
+
+        // ===== Model Management =====
+        function updateModelOptions() {
+            const baseUrlSelect = document.getElementById('baseUrlSelect');
+            const modelNameSelect = document.getElementById('modelNameSelect');
+            const selectedProvider = baseUrlSelect.value;
+            
+            modelNameSelect.innerHTML = '';
+            
+            const models = modelConfigs[selectedProvider].models;
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.value;
+                option.textContent = model.display;
+                modelNameSelect.appendChild(option);
+            });
+        }
+
+        // ===== Configuration Management =====
+        async function updateConfig() {
+            const apiKey = document.getElementById('apiKey').value;
+            const baseUrlSelect = document.getElementById('baseUrlSelect');
+            const modelNameSelect = document.getElementById('modelNameSelect');
+            
+            const selectedProvider = baseUrlSelect.value;
+            const baseUrl = modelConfigs[selectedProvider].url;
+            const modelName = modelNameSelect.value;
+
+            if (!apiKey || !baseUrl || !modelName) {
+                showSystemMessage('请填写所有配置项', 'error');
+                return;
+            }
+
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 配置中...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        api_key: apiKey,
+                        base_url: baseUrl,
+                        model_name: modelName
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSystemMessage(result.message, 'success');
+                    document.getElementById('apiKey').value = '';
+                } else {
+                    showSystemMessage(`配置失败: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showSystemMessage(`网络错误: ${error.message}`, 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // ===== Tools Management =====
+        async function loadTools() {
+            try {
+                const response = await fetch('/api/tools');
+                const tools = await response.json();
+                
+                const toolsList = document.getElementById('toolsList');
+                toolsList.innerHTML = '';
+                
+                tools.forEach(tool => {
+                    const toolCard = document.createElement('div');
+                    toolCard.className = 'tool-card';
+                    
+                    let displayName = tool.name;
+                    if (tool.name.length > 25) {
+                        displayName = tool.name.substring(0, 22) + '...';
+                    }
+                    
+                    const paramNames = Object.keys(tool.parameters);
+                    const paramCount = paramNames.length;
+                    let paramText = paramCount <= 3 ? 
+                        paramNames.join(', ') : 
+                        `${paramNames.slice(0, 2).join(', ')} 等${paramCount}个参数`;
+                    
+                    toolCard.innerHTML = `
+                        <div class="tool-name" title="${tool.name}">${displayName}</div>
+                        <div class="tool-description">${tool.description}</div>
+                        <div class="tool-params" title="${paramNames.join(', ')}">${paramText}</div>
+                    `;
+                    toolsList.appendChild(toolCard);
+                });
+            } catch (error) {
+                console.error('加载工具失败:', error);
+                const toolsList = document.getElementById('toolsList');
+                toolsList.innerHTML = '<div class="system-message error">加载工具失败</div>';
+            }
+        }
+
+        // ===== Message Management =====
+        function addMessage(text, type, toolCalls = null) {
+            const container = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message fade-in`;
+            
+            const timestamp = formatTimestamp();
+            const avatar = type === 'user' ? 
+                '<i class="fas fa-user"></i>' : 
+                '<i class="fas fa-robot"></i>';
+            
+            let renderedText;
+            try {
+                renderedText = renderMarkdown(text);
+            } catch (error) {
+                console.warn('Markdown渲染失败:', error);
+                renderedText = escapeHtml(text).replace(/\n/g, '<br>');
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">
+                    <div class="message-text">${renderedText}</div>
+                    <div class="message-timestamp">${timestamp}</div>
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+            
+            // 代码高亮
+            setTimeout(() => {
+                if (typeof hljs !== 'undefined') {
+                    messageDiv.querySelectorAll('pre code').forEach((block) => {
+                        try {
+                            hljs.highlightElement(block);
+                        } catch (error) {
+                            console.warn('代码高亮失败:', error);
+                        }
+                    });
+                }
+            }, 100);
+            
+            scrollToBottom();
+            
+            // 限制消息数量
+            const messages = container.querySelectorAll('.message');
+            if (messages.length > MAX_MESSAGES) {
+                messages[0].remove();
+            }
+            
+            // 添加到历史记录
+            conversationHistory.push({
+                type: type,
+                text: text,
+                timestamp: timestamp,
+                toolCalls: toolCalls
+            });
+            
+            if (conversationHistory.length > MAX_MESSAGES) {
+                conversationHistory.shift();
+            }
+        }
+
+
+        function showSystemMessage(text, type = 'info') {
+            const container = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `system-message ${type} fade-in`;
+            
+            const icon = type === 'success' ? 'fa-check-circle' : 
+                        type === 'error' ? 'fa-exclamation-circle' : 
+                        'fa-info-circle';
+            
+            messageDiv.innerHTML = `
+                <i class="fas ${icon}"></i>
+                <div>${text}</div>
+            `;
+            
+            container.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        async function streamMessage(text, type) {
+            const container = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message fade-in`;
+            
+            const timestamp = formatTimestamp();
+            const avatar = type === 'user' ? 
+                '<i class="fas fa-user"></i>' : 
+                '<i class="fas fa-robot"></i>';
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">
+                    <div class="message-text"></div>
+                    <div class="message-timestamp">${timestamp}</div>
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+            scrollToBottom();
+            
+            const textElement = messageDiv.querySelector('.message-text');
+            
+            // 流式显示文本
+            for (let i = 0; i < text.length; i++) {
+                textElement.innerHTML += text[i];
+                scrollToBottom();
+                await new Promise(resolve => setTimeout(resolve, 20)); // 控制显示速度
+            }
+            
+            // 渲染Markdown（如果有）
+            try {
+                const renderedText = renderMarkdown(text);
+                textElement.innerHTML = renderedText;
+            } catch (error) {
+                console.warn('Markdown渲染失败:', error);
+                textElement.innerHTML = escapeHtml(text).replace(/\n/g, '<br>');
+            }
+        }
+
+        function showLoadingMessage() {
+            const container = document.getElementById('messagesContainer');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading-message fade-in';
+            loadingDiv.id = 'loadingMessage';
+            loadingDiv.innerHTML = `
+                <div class="spinner"></div>
+                <span>AI正在思考中...</span>
+            `;
+            container.appendChild(loadingDiv);
+            scrollToBottom();
+        }
+
+        function hideLoadingMessage() {
+            const loadingDiv = document.getElementById('loadingMessage');
+            if (loadingDiv) {
+                loadingDiv.remove();
+            }
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('messagesContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // ===== Message Sending =====
+        async function sendMessage() {
+            if (isRequestInProgress) {
+                console.log('请求进行中，请稍候...');
+                return;
+            }
+            
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const message = messageInput.value.trim();
+            
+            if (!message) return;
+            
+            if (message.length > 10000) {
+                showSystemMessage('消息长度过长，请控制在10000字符以内', 'error');
+                return;
+            }
+            
+            if (messageCount >= MAX_MESSAGES) {
+                showSystemMessage('消息数量过多，请刷新页面重新开始', 'error');
+                return;
+            }
+
+            // 设置发送状态
+            isRequestInProgress = true;
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            // 添加用户消息
+            addMessage(message, 'user');
+            messageInput.value = '';
+            autoResize(messageInput);
+            messageCount++;
+
+            // 显示加载状态
+            showLoadingMessage();
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 300000);
+
+                const response = await fetch('/api/chat/stream', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message }),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                hideLoadingMessage();
+                
+                if (data.error) {
+                    showSystemMessage(`错误: ${data.error}`, 'error');
+                } else {
+                    // 处理工具规划 - 显示在任务区域
+                    if (data.tool_planning && data.tool_planning.length > 0) {
+                        displayToolPlanning(data.tool_planning);
+                    }
+                    
+                    // 流式显示AI回复
+                    await streamMessage(data.message, 'assistant');
+                    messageCount++;
+                    
+                    // 处理工具调用 - 显示在任务规划区域
+                    if (data.tool_calls && data.tool_calls.length > 0) {
+                        displayToolCallsInTaskArea(data.tool_calls);
+                    }
+                    
+                    // 处理工具结果 - 显示在结果区域
+                    if (data.tool_results && data.tool_results.length > 0) {
+                        data.tool_results.forEach(result => {
+                            addResult({
+                                type: 'tool_result',
+                                title: `工具执行结果: ${result.tool}`,
+                                data: result.output,
+                                timestamp: result.timestamp
+                            });
+                        });
+                    }
+                    
+                    // 处理任务规划 - 显示在任务区域
+                    if (data.task_plan && data.task_plan.steps && data.task_plan.steps.length > 0) {
+                        displayTaskPlan(data.task_plan);
+                        updateTaskStatus('running', '执行中');
+                    }
+                }
+            } catch (error) {
+                hideLoadingMessage();
+                if (error.name === 'AbortError') {
+                    showSystemMessage('请求超时，请稍后重试', 'error');
+                } else {
+                    showSystemMessage(`网络错误: ${error.message}`, 'error');
+                }
+            } finally {
+                isRequestInProgress = false;
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            }
+        }
+
+        // ===== Input Handling =====
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                if (!isRequestInProgress) {
+                    sendMessage();
+                }
+            }
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 128) + 'px';
+        }
+
+        // ===== History Management =====
+        function toggleHistory() {
+            const panel = document.getElementById('historyPanel');
+            if (panel.classList.contains('open')) {
+                panel.classList.remove('open');
+            } else {
+                panel.classList.add('open');
+                loadHistory();
+            }
+        }
+
+        async function loadHistory() {
+            try {
+                const response = await fetch('/api/history?limit=50');
+                if (!response.ok) {
+                    throw new Error('获取历史失败');
+                }
+
+                const data = await response.json();
+                const historyContent = document.getElementById('historyContent');
+                
+                if (data.history.length === 0) {
+                    historyContent.innerHTML = '<div class="system-message">暂无对话历史</div>';
+                    return;
+                }
+
+                const historyHtml = data.history.map((item, index) => {
+                    const timestamp = new Date(item.timestamp).toLocaleString('zh-CN');
+                    const role = item.role === 'user' ? '用户' : 'AI助手';
+                    const roleClass = item.role === 'user' ? 'user-message' : 'assistant-message';
+                    
+                    let content = item.content || item.user_message || item.assistant_response || '';
+                    content = content.trim() || '(空消息)';
+                    
+                    let parsedContent = '';
+                    try {
+                        parsedContent = marked.parse(content);
+                    } catch (e) {
+                        console.warn('Marked parsing failed:', e);
+                        parsedContent = '<p>' + escapeHtml(content) + '</p>';
+                    }
+                    
+                    return `
+                        <div class="history-item">
+                            <div class="message ${roleClass}">
+                                <div class="message-avatar">
+                                    <i class="fas ${item.role === 'user' ? 'fa-user' : 'fa-robot'}"></i>
+                                </div>
+                                <div class="message-content">
+                                    <div class="message-text">${parsedContent}</div>
+                                    <div class="message-timestamp">${timestamp}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                historyContent.innerHTML = historyHtml;
+                
+                // 语法高亮
+                historyContent.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+
+            } catch (error) {
+                console.error('加载历史错误:', error);
+                document.getElementById('historyContent').innerHTML = 
+                    '<div class="system-message error">加载历史失败: ' + error.message + '</div>';
+            }
+        }
+
+        async function clearHistory() {
+            if (!confirm('确定要清除所有对话历史吗？此操作不可撤销。')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/clear-history', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    document.getElementById('messagesContainer').innerHTML = `
+                        <div class="system-message">
+                            <i class="fas fa-info-circle"></i>
+                            <div>
+                                <strong>欢迎使用压气机叶片设计智能体！</strong>
+                                <p>请先配置API设置，然后开始您的设计对话。我可以帮助您进行叶片设计、性能评估和优化分析。</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    const historyPanel = document.getElementById('historyPanel');
+                    if (historyPanel.classList.contains('open')) {
+                        historyPanel.classList.remove('open');
+                    }
+                    
+                    showSystemMessage('对话历史已清除', 'success');
+                } else {
+                    throw new Error('清除历史失败');
+                }
+            } catch (error) {
+                console.error('清除历史错误:', error);
+                showSystemMessage('清除历史失败: ' + error.message, 'error');
+            }
+        }
+
+        // ===== Export Functionality =====
+        function exportConversation() {
+            if (conversationHistory.length === 0) {
+                showSystemMessage('没有对话记录可导出', 'error');
+                return;
+            }
+
+            const timestamp = formatTimestamp().replace(/[:/\s]/g, '-');
+            const filename = `压气机叶片设计对话_${timestamp}.md`;
+            
+            let content = `# 压气机叶片设计对话记录\n\n`;
+            content += `**导出时间:** ${formatTimestamp()}\n\n`;
+            content += `---\n\n`;
+            
+            conversationHistory.forEach((item, index) => {
+                const role = item.type === 'user' ? '👤 用户' : '🤖 AI助手';
+                content += `## ${role} (${item.timestamp})\n\n`;
+                content += `${item.text}\n\n`;
+                
+                if (item.toolCalls && item.toolCalls.length > 0) {
+                    content += `### 工具调用记录\n\n`;
+                    item.toolCalls.forEach(toolCall => {
+                        content += `**工具:** ${toolCall.tool}\n\n`;
+                        if (toolCall.arguments) {
+                            content += `**参数:**\n\`\`\`json\n${JSON.stringify(toolCall.arguments, null, 2)}\n\`\`\`\n\n`;
+                        }
+                        if (toolCall.output) {
+                            content += `**输出:**\n\`\`\`json\n${typeof toolCall.output === 'string' ? toolCall.output : JSON.stringify(toolCall.output, null, 2)}\n\`\`\`\n\n`;
+                        }
+                    });
+                }
+                
+                content += `---\n\n`;
+            });
+            
+            const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showSystemMessage('对话记录已导出', 'success');
+        }
+
+        // ===== Workspace Management =====
+        function updateTaskStatus(status, text) {
+            const indicator = document.getElementById('taskStatusIndicator');
+            const statusText = document.getElementById('taskStatusText');
+            
+            // 移除所有状态类
+            indicator.className = 'status-indicator';
+            indicator.classList.add(status);
+            statusText.textContent = text;
+        }
+
+        function displayToolPlanning(toolPlanning) {
+            const taskContent = document.getElementById('taskContent');
+            
+            // 清除空状态（如果有）
+            if (taskContent.querySelector('.empty-state')) {
+                taskContent.innerHTML = '';
+            }
+            
+            let planningHtml = '';
+            toolPlanning.forEach((plan, index) => {
+                let statusIcon = 'fa-clock';
+                let statusClass = 'planning';
+                if (plan.status === 'executing') {
+                    statusIcon = 'fa-cog fa-spin';
+                    statusClass = 'executing';
+                } else if (plan.status === 'completed') {
+                    statusIcon = 'fa-check-circle';
+                    statusClass = 'completed';
+                }
+                
+                planningHtml += `
+                    <div class="task-step ${statusClass}">
+                        <div class="step-number">${index + 1}</div>
+                        <div class="step-content">
+                            <div class="plan-status">
+                                <i class="fas ${statusIcon}"></i>
+                                <span>${plan.message}</span>
+                            </div>
+                            <small style="color: var(--text-muted);">工具: ${plan.tool}</small>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            const planningSection = `
+                <div class="task-plan">
+                    <h4>
+                        <i class="fas fa-list-check"></i>
+                        工具执行计划
+                    </h4>
+                    <div class="task-steps">
+                        ${planningHtml}
+                    </div>
+                </div>
+            `;
+            
+            // 添加到任务内容区域
+            taskContent.insertAdjacentHTML('beforeend', planningSection);
+        }
+
+        function displayToolCallsInTaskArea(toolCalls) {
+            const taskContent = document.getElementById('taskContent');
+            
+            // 清除空状态（如果有）
+            if (taskContent.querySelector('.empty-state')) {
+                taskContent.innerHTML = '';
+            }
+            
+            let toolCallsHtml = '';
+            toolCalls.forEach((toolCall, index) => {
+                let parametersHtml = '';
+                if (toolCall.arguments && typeof toolCall.arguments === 'object') {
+                    parametersHtml = Object.entries(toolCall.arguments)
+                        .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
+                        .join(', ');
+                } else if (toolCall.arguments) {
+                    parametersHtml = JSON.stringify(toolCall.arguments);
+                } else {
+                    parametersHtml = '无参数';
+                }
+                
+                toolCallsHtml += `
+                    <div class="task-step completed">
+                        <div class="step-number">${index + 1}</div>
+                        <div class="step-content">
+                            <strong>工具调用完成:</strong> ${toolCall.tool}<br>
+                            <small style="color: var(--text-muted);">参数: ${parametersHtml}</small>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            const toolCallSection = `
+                <div class="task-plan">
+                    <h4>
+                        <i class="fas fa-tools"></i>
+                        工具调用记录
+                    </h4>
+                    <div class="task-steps">
+                        ${toolCallsHtml}
+                    </div>
+                </div>
+            `;
+            
+            // 添加到任务内容区域
+            taskContent.insertAdjacentHTML('beforeend', toolCallSection);
+        }
+
+        function displayTaskPlan(plan) {
+            const taskContent = document.getElementById('taskContent');
+            
+            if (!plan || !plan.steps || plan.steps.length === 0) {
+                taskContent.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <div>
+                            <strong>暂无任务</strong><br>
+                            <small>AI助手将在这里展示任务规划和执行进度</small>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const currentStep = plan.currentStep || 0;
+            const progress = Math.round((currentStep / plan.steps.length) * 100);
+
+            let stepsHtml = '';
+            plan.steps.forEach((step, index) => {
+                const stepNumber = index + 1;
+                let stepClass = '';
+                let numberClass = '';
+                
+                if (index < currentStep) {
+                    stepClass = 'completed';
+                    numberClass = 'completed';
+                } else if (index === currentStep) {
+                    stepClass = 'current';
+                    numberClass = 'current';
+                }
+
+                stepsHtml += `
+                    <li class="task-step">
+                        <div class="step-number ${numberClass}">${stepNumber}</div>
+                        <div class="step-content ${stepClass}">${step}</div>
+                    </li>
+                `;
+            });
+
+            taskContent.innerHTML = `
+                <div class="task-plan">
+                    <h4>
+                        <i class="fas fa-route"></i>
+                        执行计划
+                    </h4>
+                    <ol class="task-steps">
+                        ${stepsHtml}
+                    </ol>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${progress}%"></div>
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; text-align: center;">
+                        进度: ${progress}% (${currentStep}/${plan.steps.length})
+                    </div>
+                </div>
+            `;
+        }
+
+        function addResult(result) {
+            const resultsContent = document.getElementById('resultsContent');
+            
+            // 如果是第一个结果，清除空状态
+            if (resultsContent.querySelector('.empty-state')) {
+                resultsContent.innerHTML = '';
+            }
+
+            const timestamp = result.timestamp ? new Date(result.timestamp).toLocaleString('zh-CN') : formatTimestamp();
+            const resultId = `result-${Date.now()}`;
+
+            let resultIcon = 'fa-tools';
+            if (result.type === 'chart') resultIcon = 'fa-chart-bar';
+            else if (result.type === 'data') resultIcon = 'fa-table';
+            else if (result.type === 'image') resultIcon = 'fa-image';
+            else if (result.type === 'text') resultIcon = 'fa-file-alt';
+            else if (result.type === 'tool_result') resultIcon = 'fa-cog';
+
+            let contentHtml = '';
+            if (result.type === 'chart') {
+                contentHtml = `
+                    <div class="result-chart">
+                        <i class="fas fa-chart-line" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i><br>
+                        图表占位符<br>
+                        <small>${result.data || '暂无数据'}</small>
+                    </div>
+                `;
+            } else if ((result.type === 'data' || result.type === 'tool_result') && typeof result.data === 'object') {
+                contentHtml = `<pre style="background: var(--bg-primary); padding: 0.5rem; border-radius: var(--radius-sm); font-size: 0.75rem; overflow-x: auto;">${JSON.stringify(result.data, null, 2)}</pre>`;
+            } else if (result.type === 'tool_result' && typeof result.data === 'string') {
+                // 尝试解析JSON字符串
+                try {
+                    const parsedData = JSON.parse(result.data);
+                    contentHtml = `<pre style="background: var(--bg-primary); padding: 0.5rem; border-radius: var(--radius-sm); font-size: 0.75rem; overflow-x: auto;">${JSON.stringify(parsedData, null, 2)}</pre>`;
+                } catch (e) {
+                    // 如果不是JSON，直接显示文本
+                    contentHtml = `<div class="result-data">${result.data}</div>`;
+                }
+            } else {
+                contentHtml = `<div class="result-data">${result.data || result.content || '无数据'}</div>`;
+            }
+
+            const resultHtml = `
+                <div class="result-item" id="${resultId}">
+                    <div class="result-header">
+                        <div class="result-title">
+                            <i class="fas ${resultIcon}"></i>
+                            ${result.title || result.tool || '工具结果'}
+                        </div>
+                        <div class="result-timestamp">${timestamp}</div>
+                    </div>
+                    ${contentHtml}
+                </div>
+            `;
+
+            resultsContent.insertAdjacentHTML('afterbegin', resultHtml);
+            
+            // 滚动到顶部显示新结果
+            resultsContent.scrollTop = 0;
+        }
+
+        function clearWorkspace() {
+            if (!confirm('确定要清空整个工作区吗？此操作不可撤销。')) {
+                return;
+            }
+
+            // 重置任务状态
+            updateTaskStatus('idle', '待启动');
+            
+            // 清空任务内容
+            document.getElementById('taskContent').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-clipboard-list"></i>
+                    <div>
+                        <strong>暂无任务</strong><br>
+                        <small>AI助手将在这里展示任务规划和执行进度</small>
+                    </div>
+                </div>
+            `;
+            
+            // 清空结果内容
+            document.getElementById('resultsContent').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-chart-line"></i>
+                    <div>
+                        <strong>暂无结果</strong><br>
+                        <small>工具函数的执行结果和可视化图表将在这里显示</small>
+                    </div>
+                </div>
+            `;
+
+            showSystemMessage('工作区已清空', 'success');
+        }
+
+        function exportWorkspace() {
+            const taskContent = document.getElementById('taskContent').innerText;
+            const resultsContent = document.getElementById('resultsContent').innerText;
+            
+            if (taskContent.includes('暂无任务') && resultsContent.includes('暂无结果')) {
+                showSystemMessage('工作区为空，无内容可导出', 'error');
+                return;
+            }
+
+            const timestamp = formatTimestamp().replace(/[:/\s]/g, '-');
+            const filename = `工作区导出_${timestamp}.txt`;
+            
+            let content = `# 压气机叶片设计智能体 - 工作区导出\n\n`;
+            content += `**导出时间:** ${formatTimestamp()}\n\n`;
+            content += `## 任务规划与执行\n\n${taskContent}\n\n`;
+            content += `## 结果与可视化\n\n${resultsContent}\n\n`;
+            
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showSystemMessage('工作区内容已导出', 'success');
+        }
+
+        function refreshResults() {
+            showSystemMessage('结果已刷新', 'info');
+        }
+
+        function clearResults() {
+            if (!confirm('确定要清空所有结果吗？')) {
+                return;
+            }
+
+            document.getElementById('resultsContent').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-chart-line"></i>
+                    <div>
+                        <strong>暂无结果</strong><br>
+                        <small>工具函数的执行结果和可视化图表将在这里显示</small>
+                    </div>
+                </div>
+            `;
+            
+            showSystemMessage('结果已清空', 'success');
+        }
+
+        // 示例：模拟添加任务和结果的函数
+        function simulateTask() {
+            // 更新任务状态
+            updateTaskStatus('running', '执行中');
+            
+            // 显示任务计划
+            const examplePlan = {
+                steps: [
+                    '分析叶片设计需求',
+                    '生成初始叶片几何',
+                    '进行CFD仿真分析',
+                    '优化叶片参数',
+                    '生成最终设计报告'
+                ],
+                currentStep: 2
+            };
+            
+            displayTaskPlan(examplePlan);
+            
+            // 添加一些示例结果
+            setTimeout(() => {
+                addResult({
+                    type: 'data',
+                    title: '叶片几何参数',
+                    data: {
+                        chord_length: '120mm',
+                        twist_angle: '15°',
+                        thickness_ratio: '0.12'
+                    }
+                });
+            }, 1000);
+            
+            setTimeout(() => {
+                addResult({
+                    type: 'chart',
+                    title: 'CFD分析结果',
+                    data: '压力分布云图'
+                });
+            }, 2000);
+        }
+
+        // ===== Initialization =====
+        window.addEventListener('DOMContentLoaded', function() {
+            // 配置 marked
+            if (typeof marked !== 'undefined') {
+                marked.setOptions({
+                    highlight: function(code, lang) {
+                        return code;
+                    },
+                    breaks: true,
+                    gfm: true
+                });
+            }
+            
+            // 初始化默认设置
+            const baseUrlSelect = document.getElementById('baseUrlSelect');
+            const modelNameSelect = document.getElementById('modelNameSelect');
+            const apiKeyInput = document.getElementById('apiKey');
+            
+            // 如果环境变量中有配置，自动填充
+            if (apiKeyInput.value) {
+                showSystemMessage('检测到环境变量配置，已自动填充API密钥', 'info');
+            }
+            
+            baseUrlSelect.value = 'SiliconFlow';
+            updateModelOptions();
+            modelNameSelect.value = 'openai/Qwen/Qwen2.5-32B-Instruct';
+            
+            // 加载工具
+            loadTools();
+            
+            // 初始化输入框
+            const messageInput = document.getElementById('messageInput');
+            messageInput.addEventListener('input', function() {
+                autoResize(this);
+            });
+            
+            // 点击空白处关闭历史面板
+            document.addEventListener('click', function(event) {
+                const historyPanel = document.getElementById('historyPanel');
+                if (historyPanel.classList.contains('open') && 
+                    !historyPanel.contains(event.target) && 
+                    !event.target.closest('[onclick="toggleHistory()"]')) {
+                    historyPanel.classList.remove('open');
+                }
+            });
+        });
+
+        // ===== Error Handling =====
+        window.addEventListener('error', function(event) {
+            console.error('全局错误:', event.error);
+            showSystemMessage('发生了意外错误，请刷新页面重试', 'error');
+        });
+
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('未处理的Promise拒绝:', event.reason);
+            showSystemMessage('网络请求失败，请检查网络连接', 'error');
+        });
+    </script>
+</body>
+</html>

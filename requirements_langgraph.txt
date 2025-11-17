@@ -1,0 +1,34 @@
+# LangGraph 版本系统依赖清单
+# =====================================
+
+# 核心框架（升级到更稳定的版本组合）
+langchain==0.3.27
+langchain-core==0.3.75
+langchain-openai==0.3.32
+langgraph==0.6.6
+
+# Web框架
+Flask==3.0.0
+python-dotenv==1.0.0
+
+# 数据处理
+numpy==1.24.3
+pandas==2.0.3
+scipy==1.11.1
+
+# 深度学习（保持原有版本）
+torch==2.5.1
+torchvision==0.20.1
+torchsummary==1.5.1
+einops==0.8.1
+
+# 可视化
+matplotlib==3.7.2
+
+# 其他工具
+pydantic==2.10.6
+typing-extensions==4.12.2
+
+# 开发工具（可选）
+pytest==8.4.1
+black==25.1.0

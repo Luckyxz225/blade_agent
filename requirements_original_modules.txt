@@ -1,0 +1,121 @@
+# ========================================
+# 原项目模块依赖清单
+# ========================================
+# 
+# 此文件包含原项目（非LangGraph部分）所需的依赖
+# 包括：
+#   1. generative_design/ - 深度学习模型（UNet、ViT）
+#   2. geometry_generate/ - 几何生成和前处理
+#   3. tools.py - 可视化功能
+#
+# 使用方法：
+#   pip install -r requirements_original_modules.txt
+#
+# 注意：这是补充文件，需要配合 requirements_langgraph.txt 使用
+# ========================================
+
+# ----------------------------------------
+# 深度学习框架
+# ----------------------------------------
+# PyTorch及相关组件（用于UNet、ViT模型）
+torch==2.0.1
+torchvision==0.15.2
+
+# PyTorch模型摘要工具（用于模型结构可视化）
+# UNet.py 和 ViT.py 中使用：from torchsummary import summary
+torchsummary==1.5.1
+
+# 张量操作库（ViT模型必需）
+# ViT.py 中使用：from einops import rearrange, reduce, repeat
+einops==0.7.0
+
+# ----------------------------------------
+# 科学计算库
+# ----------------------------------------
+# 数值计算基础库（所有模块都需要）
+numpy==1.24.3
+
+# 数据处理和分析（用于参数处理和数据加载）
+pandas==2.0.3
+
+# 科学计算工具（用于几何生成中的插值等）
+# geometry_generate.py 中使用：from scipy.interpolate import CubicSpline
+scipy==1.11.1
+
+# ----------------------------------------
+# 可视化
+# ----------------------------------------
+# 绘图库（用于3D叶片可视化）
+# tools.py 中的 plot_blade_profile 函数使用
+matplotlib==3.7.2
+
+# ----------------------------------------
+# 说明
+# ----------------------------------------
+# 
+# 各模块依赖关系：
+#
+# 1. generative_design/UNet.py
+#    - torch, torch.nn, torch.nn.functional
+#    - torchsummary
+#
+# 2. generative_design/ViT.py
+#    - torch, torch.nn
+#    - einops (重要！ViT架构必需)
+#    - torchsummary
+#
+# 3. generative_design/Prior_predict_UNet.py
+#    - torch, torch.nn
+#    - torchsummary
+#
+# 4. generative_design/compressor_design.py
+#    - torch, numpy, pandas
+#    - 调用上述3个模型文件
+#
+# 5. generative_design/blade_performance_evaluation.py
+#    - torch, numpy, pandas
+#    - 调用ViT模型
+#
+# 6. geometry_generate/geometry_generate.py
+#    - pandas, numpy
+#    - scipy.interpolate (CubicSpline)
+#
+# 7. tools.py
+#    - matplotlib (3D绘图)
+#    - numpy
+#
+# ----------------------------------------
+# 版本说明
+# ----------------------------------------
+#
+# PyTorch 2.0.1:
+#   - 稳定版本，支持Python 3.9-3.11
+#   - 包含完整的深度学习功能
+#   - macOS CPU版本需要从官方源安装
+#
+# einops 0.7.0:
+#   - ViT (Vision Transformer) 架构的核心依赖
+#   - 提供灵活的张量重排操作
+#   - 必需项，缺失会导致ViT模型无法运行
+#
+# torchsummary 1.5.1:
+#   - 用于打印模型结构
+#   - 不影响模型推理，但代码中有import
+#
+# scipy 1.11.1:
+#   - 用于几何插值计算
+#   - CubicSpline用于叶片型线生成
+#
+# ----------------------------------------
+# macOS特别说明
+# ----------------------------------------
+#
+# 如果在macOS上安装PyTorch遇到问题，使用CPU版本：
+#   pip install torch==2.0.1 torchvision==0.15.2 \
+#     --index-url https://download.pytorch.org/whl/cpu
+#
+# 或使用conda安装（推荐）：
+#   conda install pytorch==2.0.1 torchvision==0.15.2 -c pytorch
+#
+# ----------------------------------------
+
