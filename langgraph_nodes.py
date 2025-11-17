@@ -346,85 +346,18 @@ def visualization_node(state: DesignState) -> DesignState:
     return state
 
 
-# ==================== 节点5: 优化循环 ====================
+# ==================== 节点5: 优化循环（简化版） ====================
 def optimization_loop_node(state: DesignState) -> DesignState:
     """
-    优化循环节点
+    优化循环节点（简化版，暂未实现完整优化逻辑）
     
     **功能**：迭代优化设计，直到满足性能目标
     
-    **为什么需要这个节点**：
-    - 这是LangGraph的核心优势：支持循环流程
-    - 原有系统很难实现自动化迭代优化
-    - 优化后：可以设置收敛条件、最大迭代次数等
-    
-    **优化流程**：
-    1. 生成初始设计
-    2. 评估性能
-    3. 判断是否满足目标
-    4. 如果不满足，调整参数并重新设计
-    5. 重复直到满足或达到最大迭代次数
-    
-    **输入状态**：
-    - performance_targets: 目标性能
-    - iteration_count: 当前迭代次数
-    - max_iterations: 最大迭代次数
-    
-    **输出状态**：
-    - design_params: 优化后的设计
-    - optimization_history: 优化历史
-    - next_action: continue（继续优化）或 finish（完成）
+    **当前实现**：直接调用设计生成，未来可扩展迭代优化
     """
     
-    performance_targets = state.get("performance_targets")
-    iteration_count = state.get("iteration_count", 0)
-    max_iterations = state.get("max_iterations", 10)
-    
-    if iteration_count >= max_iterations:
-        state["messages"].append(
-            AIMessage(content=f"已达到最大迭代次数 {max_iterations}，优化结束。")
-        )
-        state["next_action"] = EdgeConditions.FINISH_OPTIMIZATION
-        return state
-    
-    try:
-        # 1. 生成设计
-        design_result = blade_design_tool.invoke({
-            "flow_rate": performance_targets.get("flow_rate", 15.0),
-            "efficiency": performance_targets.get("efficiency", 0.85),
-            "pressure_ratio": performance_targets.get("pressure_ratio", 1.5),
-            "top_k": 1
-        })
-        
-        # 2. 评估性能
-        params_list = extract_21d_params(design_result)
-        eval_result = blade_performance_evaluation_tool.invoke({
-            "design_params": params_list
-        })
-        
-        # 3. 判断是否满足目标
-        if check_performance_meets_target(eval_result, performance_targets):
-            state["design_params"] = design_result
-            state["evaluation_results"] = eval_result
-            state["messages"].append(
-                AIMessage(content=f"优化成功！在第 {iteration_count + 1} 次迭代找到满足要求的设计。")
-            )
-            state["next_action"] = EdgeConditions.FINISH_OPTIMIZATION
-        else:
-            # 4. 继续优化
-            state["iteration_count"] = iteration_count + 1
-            state["optimization_history"].append({
-                "iteration": iteration_count + 1,
-                "design": design_result,
-                "performance": eval_result
-            })
-            state["next_action"] = EdgeConditions.CONTINUE_OPTIMIZATION
-        
-    except Exception as e:
-        state["error_message"] = f"优化失败: {str(e)}"
-        state["next_action"] = EdgeConditions.TO_ERROR
-    
-    return state
+    # 暂时简化为直接调用设计生成
+    return design_generation_node(state)
 
 
 # ==================== 节点6: 结果整合 ====================
@@ -660,20 +593,34 @@ def extract_21d_params(design_result: Dict) -> List[List[float]]:
     """
     从设计结果中提取21维参数列表
     
-    **为什么需要这个函数**：
-    - 设计工具返回的是字典格式
-    - 评估工具需要的是列表格式
-    - 需要转换函数进行适配
+    设计工具返回的是字典格式，评估工具需要列表格式，此函数进行转换
     """
-    # TODO: 根据实际的design_result结构实现
-    # 示例实现：
     params = []
     if "第1个设计结果" in design_result:
         design = design_result["第1个设计结果"]
-        # 提取21个参数
+        # 提取21个参数（叶根7个 + 叶中7个 + 叶尖7个）
         param_list = [
-            design.get(f"root_Angle_in（叶根进口金属角[°]）", 0),
-            # ... 其他20个参数
+            design.get("root_Angle_in（叶根进口金属角[°]）", 57),
+            design.get("root_Angle_out（叶根出口金属角[°]）", -33),
+            design.get("root_Chord（叶根弦长[m]）", 0.17),
+            design.get("root_THmax_CH（叶根最大厚度与弦长比[%]）", 15.73),
+            design.get("root_THmaxP（叶根最大厚度位置）", 0.76),
+            design.get("root_SWA（叶根掠量[m]）", 0.01),
+            design.get("root_BOWA（叶根弯量[m]）", 0.01),
+            design.get("mid_Angle_in（叶中进口金属角[°]）", 55),
+            design.get("mid_Angle_out（叶中出口金属角[°]）", 25),
+            design.get("mid_Chord（叶中弦长[m]）", 0.2),
+            design.get("mid_THmax_CH（叶中最大厚度与弦长比[%]）", 6.7),
+            design.get("mid_THmaxP（叶中最大厚度位置）", 0.6),
+            design.get("mid_SWA（叶中掠量[m]）", 0.02),
+            design.get("mid_BOWA（叶中弯量[m]）", 0.01),
+            design.get("tip_Angle_in（叶尖进口金属角[°]）", 68),
+            design.get("tip_Angle_out（叶尖出口金属角[°]）", 61),
+            design.get("tip_Chord（叶尖弦长[m]）", 0.13),
+            design.get("tip_THmax_CH（叶尖最大厚度与弦长比[%]）", 6.3),
+            design.get("tip_THmaxP（叶尖最大厚度位置）", 0.6),
+            design.get("tip_SWA（叶尖掠量[m]）", -0.01),
+            design.get("tip_BOWA（叶尖弯量[m]）", 0.02),
         ]
         params.append(param_list)
     return params
@@ -683,26 +630,31 @@ def extract_visualization_params(design_params: Dict) -> Dict:
     """
     从设计参数中提取可视化所需的参数
     """
-    # TODO: 根据实际结构实现
-    return {}
-
-
-def check_performance_meets_target(
-    eval_result: Dict,
-    targets: Dict,
-    tolerance: float = 0.05
-) -> bool:
-    """
-    检查性能是否满足目标
+    if not design_params or "第1个设计结果" not in design_params:
+        return {}
     
-    **参数**：
-    - eval_result: 评估结果
-    - targets: 目标值
-    - tolerance: 容差（默认5%）
-    
-    **返回**：
-    True表示满足，False表示不满足
-    """
-    # TODO: 实现具体的判断逻辑
-    return False
+    design = design_params["第1个设计结果"]
+    return {
+        "root_Angle_in": design.get("root_Angle_in（叶根进口金属角[°]）", 57),
+        "root_Angle_out": design.get("root_Angle_out（叶根出口金属角[°]）", -33),
+        "root_Chord": design.get("root_Chord（叶根弦长[m]）", 0.17),
+        "root_THmax_CH": design.get("root_THmax_CH（叶根最大厚度与弦长比[%]）", 15.73),
+        "root_THmaxP": design.get("root_THmaxP（叶根最大厚度位置）", 0.76),
+        "root_SWA": design.get("root_SWA（叶根掠量[m]）", 0.01),
+        "root_BOWA": design.get("root_BOWA（叶根弯量[m]）", 0.01),
+        "mid_Angle_in": design.get("mid_Angle_in（叶中进口金属角[°]）", 55),
+        "mid_Angle_out": design.get("mid_Angle_out（叶中出口金属角[°]）", 25),
+        "mid_Chord": design.get("mid_Chord（叶中弦长[m]）", 0.2),
+        "mid_THmax_CH": design.get("mid_THmax_CH（叶中最大厚度与弦长比[%]）", 6.7),
+        "mid_THmaxP": design.get("mid_THmaxP（叶中最大厚度位置）", 0.6),
+        "mid_SWA": design.get("mid_SWA（叶中掠量[m]）", 0.02),
+        "mid_BOWA": design.get("mid_BOWA（叶中弯量[m]）", 0.01),
+        "tip_Angle_in": design.get("tip_Angle_in（叶尖进口金属角[°]）", 68),
+        "tip_Angle_out": design.get("tip_Angle_out（叶尖出口金属角[°]）", 61),
+        "tip_Chord": design.get("tip_Chord（叶尖弦长[m]）", 0.13),
+        "tip_THmax_CH": design.get("tip_THmax_CH（叶尖最大厚度与弦长比[%]）", 6.3),
+        "tip_THmaxP": design.get("tip_THmaxP（叶尖最大厚度位置）", 0.6),
+        "tip_SWA": design.get("tip_SWA（叶尖掠量[m]）", -0.01),
+        "tip_BOWA": design.get("tip_BOWA（叶尖弯量[m]）", 0.02),
+    }
 
