@@ -1,137 +1,17 @@
-from typing import Union
-# from agents import function_tool  # LangGraph版本不需要
+"""
+叶片可视化工具模块
+只包含必要的可视化函数
+"""
 import matplotlib.pyplot as plt
-import base64
-from io import BytesIO
 import matplotlib
 from pathlib import Path
-matplotlib.use('Agg')  # 使用非GUI后端，适合Web服务或后端处理
-import random
 import numpy as np
-# @function_tool  # LangGraph版本不需要
-def blade_performance_evaluation(blade_height: Union[float, int, str], blade_chord: Union[float, int, str],
-                                 blade_angle: Union[float, int, str]) -> dict:
-    """Evaluate blade performance based on geometry parameters."""
-    # 记录工具参数
-    arguments = {
-        "blade_height": blade_height,
-        "blade_chord": blade_chord,
-        "blade_angle": blade_angle
-    }
 
-
-    try:
-        blade_height = blade_height
-        blade_chord = blade_chord
-        blade_angle = blade_angle
-
-        if blade_height <= 0 or blade_chord <= 0 or blade_angle <= 0 or blade_angle >= 90:
-            raise ValueError("参数超出合理范围")
-
-        flow_rate = 0.5
-        pressure_ratio = 0.5
-        efficiency = 0.5
-
-        efficiency = max(0.1, min(0.95, efficiency))
-        pressure_ratio = max(1.0, pressure_ratio)
-
-        return {
-            "flow_rate": round(float(flow_rate), 6),
-            "pressure_ratio": round(float(pressure_ratio), 6),
-            "efficiency": round(float(efficiency), 6)
-        }
-    except Exception as e:
-        return {
-            "error": f"性能评估失败: {str(e)}",
-            "flow_rate": 0.0,
-            "pressure_ratio": 1.0,
-            "efficiency": 0.0
-        }
-
+matplotlib.use('Agg')  # 使用非GUI后端，适合Web服务或后端处理
 
 # 创建保存图像的目录
 IMAGE_DIR = Path("static/images")
 IMAGE_DIR.mkdir(parents=True, exist_ok=True)
-
-
-# @function_tool
-# def plot_blade_profile(
-#         blade_height: float=2,
-#         blade_chord: float=2,
-#         blade_angle: float=40,
-#         profile_style: str = "naca0012"
-# ) -> dict:
-#     """
-#     绘制叶片轮廓图并保存为文件，返回图像路径和描述
-#
-#     **参数说明**:
-#     - blade_height: 叶片高度(mm)
-#     - blade_chord: 叶片弦长(mm)
-#     - blade_angle: 叶片角度(度)
-#     - profile_style: 轮廓类型 (naca0012|elliptic|parabolic)
-#
-#     **返回值** (dict):
-#     必须为object,并且包含.image_path
-#     {"image_path": "图像路径", "description": "轮廓描述"}
-#     """
-#     try:
-#         # 生成唯一文件名
-#         import uuid
-#         filename = f"blade_{uuid.uuid4().hex}.png"
-#         filepath = IMAGE_DIR / filename
-#
-#         # 创建叶片轮廓数据
-#         fig, ax = plt.subplots(figsize=(8, 4))
-#
-#         # 根据不同类型生成轮廓
-#         if profile_style == "naca0012":
-#             x = [0, 0.25, 0.5, 0.75, 1.0]
-#             y_upper = [0, 0.08, 0.05, 0.02, 0]
-#             y_lower = [0, -0.08, -0.05, -0.02, 0]
-#         elif profile_style == "elliptic":
-#             x = [0, 0.2, 0.4, 0.6, 0.8, 1.0]
-#             y_upper = [0, 0.12, 0.15, 0.12, 0.06, 0]
-#             y_lower = [0, -0.12, -0.15, -0.12, -0.06, 0]
-#         else:  # parabolic
-#             x = [0, 0.3, 0.6, 1.0]
-#             y_upper = [0, 0.1, 0.07, 0]
-#             y_lower = [0, -0.1, -0.07, 0]
-#
-#         # 缩放尺寸
-#         x_scaled = [xi * blade_chord for xi in x]
-#         y_upper_scaled = [yi * blade_chord + blade_height / 2 for yi in y_upper]
-#         y_lower_scaled = [yi * blade_chord - blade_height / 2 for yi in y_lower]
-#
-#         # 绘制轮廓
-#         ax.plot(x_scaled, y_upper_scaled, 'b-', label='Upper Surface')
-#         ax.plot(x_scaled, y_lower_scaled, 'r-', label='Lower Surface')
-#         ax.fill_between(x_scaled, y_upper_scaled, y_lower_scaled, color='gray', alpha=0.2)
-#
-#         # 设置图形属性
-#         ax.set_title(f"Blade Profile ({profile_style})")
-#         ax.set_xlabel('Chord Length (mm)')
-#         ax.set_ylabel('Height (mm)')
-#         ax.legend()
-#         ax.grid(True)
-#         ax.set_aspect('equal')
-#
-#         # 保存图像
-#         plt.savefig(filepath, format='png', dpi=100)
-#         plt.close(fig)
-#
-#         return {
-#             "image_path": f"/static/images/{filename}",
-#             "description": f"{profile_style}型轮廓，弦长{blade_chord}mm，高度{blade_height}mm"
-#         }
-#     except Exception as e:
-#         return {
-#             "error": str(e),
-#             "image_path": "",
-#             "description": "绘图失败"
-#         }
-
-
-# @function_tool  # LangGraph版本不需要
 def plot_blade_profile(
         # —— 叶根（Hub）参数 ——
         root_Angle_in: float=57,  # 叶根进口金属角（单位：度）
@@ -251,10 +131,3 @@ def plot_blade_profile(
         }
 
 
-# if __name__=="__main__":
-    # 查看装饰后的工具元数据
-    # tool = plot_blade_profile  # 装饰后的函数实际是 FunctionTool 实例
-    # print(tool.name)  # 函数名（或 name_override）
-    # print(tool.description)  # 从docstring提取的描述
-    # print(tool.params_json_schema)  # 包含参数描述的JSON Schema
-    # a=visualization_blade_geometry()

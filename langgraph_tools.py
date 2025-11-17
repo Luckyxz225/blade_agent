@@ -190,54 +190,11 @@ def blade_visualization_tool(
         }
 
 
-@tool
-def geometry_preprocessing_tool(
-    design_csv_path: str,
-    output_folder: str
-) -> dict:
-    """
-    叶片几何前处理工具
-    
-    **修改说明**：
-    - 封装geometry_generate模块的前处理功能
-    - 将21维设计参数转换为CAD系统可用的几何数据
-    
-    **为什么需要这个工具**：
-    - 完整的设计流程：设计参数 → 几何文件 → CAD建模 → CFD分析
-    - 这是从参数到实际几何的桥梁
-    - 原模块功能完整，仅需要工具化接口
-    
-    参数说明：
-    - design_csv_path: blade_design生成的CSV文件路径
-    - output_folder: 输出几何文件的文件夹路径
-    
-    返回值：
-    包含生成的几何文件路径列表
-    """
-    try:
-        from geometry_generate.geometry_generate import read_and_process_dat_file
-        
-        # 调用原有前处理函数
-        # 这里需要根据实际的geometry_generate模块接口调整
-        result = {
-            "status": "success",
-            "message": "几何前处理完成",
-            "output_files": []
-        }
-        return result
-    except Exception as e:
-        return {
-            "error": f"几何前处理失败: {str(e)}",
-            "status": "failed"
-        }
-
-
-# 工具列表导出
+# 工具列表导出（只保留必要的工具）
 LANGGRAPH_TOOLS = [
     blade_design_tool,
     blade_performance_evaluation_tool,
-    blade_visualization_tool,
-    geometry_preprocessing_tool
+    blade_visualization_tool
 ]
 
 
