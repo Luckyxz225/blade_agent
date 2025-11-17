@@ -100,3 +100,9 @@ dmypy.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Large model files
+*.pth
+*.npy
+all_file_path/*.pth
+all_file_path/*.npy
