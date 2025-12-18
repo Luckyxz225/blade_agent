@@ -1,0 +1,5 @@
+Error in processing folder 6: D:\NUMECA_SOFTWARE\Fine171\bin\mv.exe: C:\Users\dell\.numeca\tmp\tmp_parasolid_0.x_t: No such file or directory
+
+Error in processing folder 7: Error   : ParasolidLoftedBody::create - ERROR
+Error   :   Lofted body has self-intersection in at least one of its geometries
+
